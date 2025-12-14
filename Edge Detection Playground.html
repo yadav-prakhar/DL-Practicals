@@ -481,6 +481,44 @@
             applyFilter();
         }
 
+        function gaussianBlur(imageData, blurRadius) {
+            if (blurRadius <= 1) return imageData;
+
+            const data = imageData.data;
+            const width = imageData.width;
+            const height = imageData.height;
+            const temp = new Uint8ClampedArray(data.length);
+
+            // Simple box blur (approximation of gaussian)
+            const kernel = Math.floor(blurRadius / 2);
+
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    let r = 0, g = 0, b = 0, count = 0;
+
+                    for (let dy = -kernel; dy <= kernel; dy++) {
+                        for (let dx = -kernel; dx <= kernel; dx++) {
+                            const ny = Math.max(0, Math.min(height - 1, y + dy));
+                            const nx = Math.max(0, Math.min(width - 1, x + dx));
+                            const idx = (ny * width + nx) * 4;
+                            r += data[idx];
+                            g += data[idx + 1];
+                            b += data[idx + 2];
+                            count++;
+                        }
+                    }
+
+                    const idx = (y * width + x) * 4;
+                    temp[idx] = r / count;
+                    temp[idx + 1] = g / count;
+                    temp[idx + 2] = b / count;
+                    temp[idx + 3] = data[idx + 3];
+                }
+            }
+
+            return new ImageData(temp, width, height);
+        }
+
         function convolution(imageData, kernel) {
             const data = imageData.data;
             const width = imageData.width;
@@ -535,31 +573,39 @@
             originalCtx.putImageData(sourceImage, 0, 0);
 
             const threshold = parseInt(document.getElementById('thresholdSlider').value);
+            const blurRadius = parseInt(document.getElementById('blurSlider').value);
             const direction = document.getElementById('directionSelect').value;
+
+            // Apply blur first if needed
+            let processedImage = sourceImage;
+            if (blurRadius > 1) {
+                processedImage = gaussianBlur(sourceImage, blurRadius);
+            }
 
             let result = null;
 
             if (currentFilter === 'laplacian') {
-                result = convolution(sourceImage, filters.laplacian.both);
+                result = convolution(processedImage, filters.laplacian.both);
             } else if (currentFilter === 'custom') {
-                result = convolution(sourceImage, customKernel);
+                result = convolution(processedImage, customKernel);
             } else {
-                const xResult = convolution(sourceImage, filters[currentFilter].x);
-                const yResult = convolution(sourceImage, filters[currentFilter].y);
+                const xResult = convolution(processedImage, filters[currentFilter].x);
+                const yResult = convolution(processedImage, filters[currentFilter].y);
 
                 if (direction === 'x') {
                     result = xResult;
                 } else if (direction === 'y') {
                     result = yResult;
                 } else {
-                    result = new ImageData(sourceImage.width, sourceImage.height);
+                    const resultData = new Uint8ClampedArray(xResult.data.length);
                     for (let i = 0; i < xResult.data.length; i += 4) {
                         const xVal = xResult.data[i];
                         const yVal = yResult.data[i];
                         const combined = Math.sqrt(xVal * xVal + yVal * yVal);
-                        result.data[i] = result.data[i + 1] = result.data[i + 2] = Math.min(255, combined);
-                        result.data[i + 3] = 255;
+                        resultData[i] = resultData[i + 1] = resultData[i + 2] = Math.min(255, combined);
+                        resultData[i + 3] = 255;
                     }
+                    result = new ImageData(resultData, sourceImage.width, sourceImage.height);
                 }
             }
 
