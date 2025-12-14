@@ -5,6 +5,7 @@ This repository contains practical exercises, code snippets, and experiments rel
 ## Contents
 - [Edge Detection Playground](https://yadav-prakhar.github.io/DL-Practicals/Edge-Detection-Playground.html)
   - play with various filter/kernel values to see effect on edge detection  
+  - feel free to use sample image provided in [asset folder](https://github.com/yadav-prakhar/DL-Practicals/blob/master/assets/)
 
 ## Usage
 Feel free to explore, modify, and run the code. Contributions and suggestions are welcome!

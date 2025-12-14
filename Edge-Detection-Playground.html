@@ -272,9 +272,6 @@
                 <div class="control-section">
                     <label class="control-label">📸 Source Image</label>
                     <input type="file" id="imageInput" accept="image/*">
-                    <p style="font-size: 12px; color: var(--color-text-secondary); margin: 10px 0 0 0;">
-                        Or use <button onclick="loadSampleImage()" style="width: 100%; padding: 6px; margin-top: 8px;">Load Sample</button>
-                    </p>
                 </div>
 
                 <div class="control-section">
@@ -391,39 +388,6 @@
                     container.appendChild(input);
                 }
             }
-        }
-
-        function loadSampleImage() {
-            const canvas = document.getElementById('originalCanvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = 400;
-            canvas.height = 400;
-            
-            ctx.fillStyle = '#fff';
-            ctx.fillRect(0, 0, 400, 400);
-            
-            ctx.strokeStyle = '#000';
-            ctx.lineWidth = 3;
-            ctx.rect(50, 50, 150, 150);
-            ctx.stroke();
-            
-            ctx.beginPath();
-            ctx.arc(250, 150, 100, 0, Math.PI * 2);
-            ctx.stroke();
-            
-            ctx.rect(150, 250, 200, 100);
-            ctx.stroke();
-            
-            ctx.lineWidth = 2;
-            for (let i = 0; i < 5; i++) {
-                ctx.beginPath();
-                ctx.moveTo(50, 350 - i * 15);
-                ctx.lineTo(350, 350 - i * 15);
-                ctx.stroke();
-            }
-            
-            sourceImage = canvas.getImageData(0, 0, canvas.width, canvas.height);
-            applyFilter();
         }
 
         function setFilter(name) {
@@ -623,6 +587,7 @@
             const reader = new FileReader();
             reader.onload = (event) => {
                 const img = new Image();
+                img.onerror = () => console.error('Failed to load image');
                 img.onload = () => {
                     const canvas = document.getElementById('originalCanvas');
                     canvas.width = img.width;
@@ -642,8 +607,6 @@
             initCustomKernelInputs();
             applyFilter();
         }
-
-        loadSampleImage();
     </script>
 </body>
 </html>
